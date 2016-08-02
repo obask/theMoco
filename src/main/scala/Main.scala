@@ -10,38 +10,12 @@ import org.json4s.jackson.JsonMethods
 
 object Main extends App {
 
-  private val stravaHost = "www.strava.com"
-  private val stravaPort = 443
 
   private val servicePort = 8080
 
-  private val OAUTH_TOKEN = sys.env.getOrElse("STRAVA_ACCESS_TOKEN",
-    throw new Exception("STRAVA_ACCESS_TOKEN doesn't set in environment")
-  )
 
-
-  val client: Service[http.Request, http.Response] = builder.ClientBuilder()
-      .codec(http.Http())
-      .hosts(stravaHost + ":" + stravaPort.toString)
-      .tls(stravaHost)
-      .hostConnectionLimit(64)
-      .build()
-
-  def request1(activity: String) = http.RequestBuilder()
-    .url(new URL("https", stravaHost, stravaPort, s"/api/v3/activities/" + activity))
-    .setHeader("Authorization", "Bearer " + OAUTH_TOKEN)
-    .buildGet()
-
-  def request2(segment: String) = http.RequestBuilder()
-    .url(new URL("https", stravaHost, stravaPort, s"/api/v3/segments/" + segment))
-    .setHeader("Authorization", "Bearer " + OAUTH_TOKEN)
-    .buildGet()
-
-  def response1(activity: String): Future[Seq[BigInt]] = client(request1(activity))
-    .onFailure { failureAction }
-    .map {
-      req: http.Response =>
-        val content = JsonMethods.parse(req.contentString)
+  def response1(content: String): Seq[BigInt] = {
+        val content = JsonMethods.parse(content)
         val ids = content \ "segment_efforts" \\ "segment" \\ "id"
         val result: Seq[BigInt] = for {
           JObject(segments) <- ids
@@ -51,35 +25,34 @@ object Main extends App {
         result
     }
 
-
-  def failureAction(err: Throwable) = {
-    println(s"strava api error: " + err.getMessage)
+  def response2(content: String): Option[BigInt] = {
+      val json = JsonMethods.parse(content)
+      val count = json \ "effort_count" match {case JInt(x) => Some(x); case _ => None}
+      println("GET success: " + count.toString)
+      count
   }
-
-//  FIXME remove option here
-  def response2(id: String): Future[Option[BigInt]] = client(request2(id))
-    .onFailure { failureAction }
-    .map {
-      req: http.Response =>
-        val json = JsonMethods.parse(req.contentString)
-        val count = json \ "effort_count" match {case JInt(x) => Some(x); case _ => None}
-        println("GET success: " + count.toString)
-        count
-    }
 
 // TODO check empty list
   def getBusiness(activity: String): Future[BigInt] = {
-    response1(activity) flatMap {
-      ids: Seq[BigInt] =>
-        val deDuplicated = ids.toSet
-        val tmp = for (segment <- deDuplicated)
-          yield response2(segment.toString) map {x => segment -> x.get }
-        val xx: Future[BigInt] = Future.collect(tmp.toSeq).map {
-          ll: Seq[(BigInt, BigInt)] =>
-            val tmp: (BigInt, BigInt) = ll.maxBy(_._2)
-            tmp._1
-        }
-        xx
+    StravaWrapper.activitiesRequest(activity)
+      .map(response1)
+      .flatMap { ids: Seq[BigInt] =>
+          val deDuplicated = ids.toSet
+          val elems: Set[Future[(BigInt, BigInt)]] = for {
+            segment <- deDuplicated
+            contOpt = StravaWrapper.segmentsRequest(segment.toString).map(response2)
+            tmp = contOpt.flatMap {
+              case Some(x) => Future(x)
+              case None => Future.never
+            }
+          } yield tmp.map(segment -> _)
+        
+          val xx: Future[BigInt] = Future.collect(elems.toSeq).map {
+            ll: Seq[(BigInt, BigInt)] =>
+              val tmp: (BigInt, BigInt) = ll.maxBy(_._2)
+              tmp._1
+          }
+          xx
     }
   }
 
