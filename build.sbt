@@ -8,6 +8,10 @@ libraryDependencies += "com.twitter" %% "finagle-http" % "6.36.0"
 
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.4.0"
 
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+libraryDependencies += "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
 
-mainClass in Compile := Some("Main")
+//libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+
+//scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+
+//mainClass in Compile := Some("Main")
