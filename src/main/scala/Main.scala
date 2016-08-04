@@ -1,7 +1,9 @@
+import java.util.concurrent.TimeUnit
+
 import com.twitter.finagle._
 import com.twitter.finagle.http
 import com.twitter.finagle.http.path.{/, Long, Root}
-import com.twitter.util.{Await, Future}
+import com.twitter.util.{Await, Duration, Future}
 import com.twitter.finagle.http.service.RoutingService
 
 
@@ -11,28 +13,16 @@ object Main extends App {
     throw new Exception("STRAVA_ACCESS_TOKEN doesn't set in environment")
   )
 
+  lazy val DEFAULT_TIMEOUT = Duration(7, TimeUnit.SECONDS)
+
   private val servicePort = 8080
-  private val stravaWrapper = new StravaWrapper(OAUTH_TOKEN)
-  private val controller = new MicroController(stravaWrapper)
-
-
-  def userService(activity: Long) = {
-      // TODO check empty list
-    controller.findMostPopularRoute(activity)
-      .map {
-        case Some(result) =>
-          val rep = http.Response(http.Status.Ok)
-          rep.setContentString(result.toString)
-          rep
-        case None =>
-          http.Response(http.Status.NotFound)
-    }
-  }
+  private val stravaWrapper = new StravaService(OAUTH_TOKEN)
+  private val controller = new MostContestedController(stravaWrapper)
 
   val router = RoutingService.byPathObject[http.Request] {
     case Root / "most_contested" / Long(id) => new Service[http.Request, http.Response] {
       def apply(req: http.Request): Future[http.Response] = {
-        userService(id)
+        controller.proceedUserRequest(id)
       }
     }
     case _ => new Service[http.Request, http.Response] {
