@@ -1,10 +1,11 @@
-import com.twitter.util.{Await, Future, TimeoutException}
-import org.scalatest.FlatSpec
+import com.twitter.util._
+import org.scalatest._
 import org.scalamock.scalatest.MockFactory
-import com.twitter.finagle.http
+import org.scalatest.concurrent.{Futures, ScalaFutures}
 
+import scala.concurrent.Promise
 
-class MicroControllerTest extends FlatSpec with MockFactory {
+class MicroControllerTest extends FlatSpec with MockFactory with ScalaFutures {
 
 
   val testJson1 = """
@@ -48,6 +49,16 @@ class MicroControllerTest extends FlatSpec with MockFactory {
                   """
   val activityId: Long = 625234022
 
+  // workaround for twitter features
+  def twitterToScalaFuture[T](twitterFuture: com.twitter.util.Future[T]): scala.concurrent.Future[T] = {
+    val promise = Promise[T]()
+    twitterFuture respond {
+      case Return(a) => promise success a
+      case Throw(e)  => promise failure e
+    }
+    promise.future
+  }
+
   class MockableClass extends StravaWrapper("test")
   val stravaMock = stub[MockableClass]
 
@@ -59,8 +70,9 @@ class MicroControllerTest extends FlatSpec with MockFactory {
     stravaMock.segmentsRequest _ when (2507082: BigInt) returns Future(testJson4)
 
     val controller: MicroController = new MicroController(stravaMock)
-    val res = Await.result(controller.findMostPopularRoute(activityId))
-    assert(res.contains(6920366: BigInt))
+    val tmp = controller.findMostPopularRoute(activityId)
+    assert(twitterToScalaFuture(tmp).futureValue.contains(6920366: BigInt))
+
   }
 
   "MicroController" should "handle client error" in {
@@ -72,7 +84,7 @@ class MicroControllerTest extends FlatSpec with MockFactory {
 
     val controller: MicroController = new MicroController(stravaMock)
     val caught = intercept[Exception] {
-      Await.result(controller.findMostPopularRoute(activityId))
+      twitterToScalaFuture(controller.findMostPopularRoute(activityId)).futureValue
     }
     assert(!caught.getMessage.isEmpty)
   }
@@ -82,11 +94,12 @@ class MicroControllerTest extends FlatSpec with MockFactory {
     stravaMock.activitiesRequest _ when activityId returns Future("{\"segment_efforts\": []}")
 
     val controller = new MicroController(stravaMock)
-    val res = Await.result(controller.findMostPopularRoute(activityId))
-    assert(res.isEmpty)
+    val res = twitterToScalaFuture(controller.findMostPopularRoute(activityId))
+    assert(res.futureValue.isEmpty)
+
   }
 
-  "MicroController" should "handle timout error" in {
+  "MicroController" should "handle timeout error" in {
 
     stravaMock.activitiesRequest _ when activityId returns Future.never
 
