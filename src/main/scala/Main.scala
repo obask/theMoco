@@ -1,3 +1,4 @@
+import java.net.{InetAddress, InetSocketAddress}
 import java.util.concurrent.TimeUnit
 
 import com.twitter.finagle._
@@ -10,7 +11,7 @@ import com.twitter.finagle.http.service.RoutingService
 object Main extends App {
 
   private val OAUTH_TOKEN = sys.env.getOrElse("STRAVA_ACCESS_TOKEN",
-    throw new Exception("STRAVA_ACCESS_TOKEN doesn't set in environment")
+    throw new RuntimeException("STRAVA_ACCESS_TOKEN doesn't set in environment")
   )
 
   lazy val DEFAULT_TIMEOUT = Duration(7, TimeUnit.SECONDS)
@@ -32,7 +33,7 @@ object Main extends App {
     }
   }
 
-  val server = Http.serve(":" + servicePort.toString, router)
+  val server = Http.serve(new InetSocketAddress(servicePort), router)
   Await.ready(server)
 
 }
