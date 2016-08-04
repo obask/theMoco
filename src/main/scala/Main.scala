@@ -1,4 +1,4 @@
-import java.net.{InetAddress, InetSocketAddress}
+import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
 
 import com.twitter.finagle._
@@ -7,6 +7,10 @@ import com.twitter.finagle.http.path.{/, Long, Root}
 import com.twitter.util.{Await, Duration, Future}
 import com.twitter.finagle.http.service.RoutingService
 
+
+/**
+  * Entry point of service starts routing requests on port 8080.
+  */
 
 object Main extends App {
 

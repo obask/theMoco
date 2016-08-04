@@ -42,7 +42,6 @@ class StravaServiceTest extends FlatSpec with MockFactory with ScalaFutures {
   }
 
 
-
   "StravaServiceImplTest" should "parseEffortCount" in {
 
     val tmp1 = StravaService.parseEffortCount(testJson2)

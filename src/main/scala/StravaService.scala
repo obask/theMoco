@@ -6,6 +6,11 @@ import com.twitter.util.Future
 import org.json4s.JsonAST.{JField, JInt, JObject}
 import org.json4s.jackson.JsonMethods
 
+/**
+  * A simple wrapper for Strava API.
+  * It allows clients to load segments list for each activity
+  * and get effort_count parameter for any segment.
+  */
 
 class StravaService(oauthToken: String) {
 

@@ -26,7 +26,7 @@ class MostContestedControllerTest extends FlatSpec with MockFactory with ScalaFu
 
   val stravaMock = stub[StravaServiceHelper]
 
-  "MicroController" should "find the max element" in {
+  "MostContestedController" should "find the max element" in {
 
     stravaMock.getSegmentsOfActivity _ when activityId returns Future(Seq(6920366, 4644366, 2507082): Seq[BigInt])
     stravaMock.getActivitiesEffortCount _ when (6920366: BigInt) returns Future(100: BigInt)
@@ -39,7 +39,7 @@ class MostContestedControllerTest extends FlatSpec with MockFactory with ScalaFu
 
   }
 
-  "MicroController" should "handle client error" in {
+  "MostContestedController" should "handle client error" in {
 
     stravaMock.getSegmentsOfActivity _ when activityId returns Future(Seq(6920366, 4644366, 2507082): Seq[BigInt])
     stravaMock.getActivitiesEffortCount _ when (6920366: BigInt) returns Future.exception(new IllegalStateException("qwerty"))
@@ -52,7 +52,7 @@ class MostContestedControllerTest extends FlatSpec with MockFactory with ScalaFu
     assert(caught.contentString contains "qwerty")
   }
 
-  "MicroController" should "find the max element of empty list" in {
+  "MostContestedController" should "find the max element of empty list" in {
 
     stravaMock.getSegmentsOfActivity _ when activityId returns Future(Seq(): Seq[BigInt])
 
@@ -62,7 +62,7 @@ class MostContestedControllerTest extends FlatSpec with MockFactory with ScalaFu
 
   }
 
-  "MicroController" should "handle timeout error" in {
+  "MostContestedController" should "handle timeout error" in {
 
     stravaMock.getSegmentsOfActivity _ when activityId returns Future.never
 

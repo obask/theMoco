@@ -1,10 +1,15 @@
-import java.util.concurrent.TimeUnit
-
 import com.twitter.finagle.http
 import com.twitter.util.Future
 
 import scala.util.{Failure, Try}
 import com.twitter.finagle.util.DefaultTimer
+
+/**
+  * A controller with single handler proceedUserRequest
+  * returns most contested segment for any user activity.
+  * If user has no access to activity segments returns 404 NotFound.
+  */
+
 
 class MostContestedController(stravaWrapper: StravaService) {
 
