@@ -29,9 +29,9 @@ class MostContestedControllerTest extends FlatSpec with MockFactory with ScalaFu
   "MostContestedController" should "find the max element" in {
 
     stravaMock.getSegmentsOfActivity _ when activityId returns Future(Seq(6920366, 4644366, 2507082): Seq[BigInt])
-    stravaMock.getActivitiesEffortCount _ when (6920366: BigInt) returns Future(100: BigInt)
-    stravaMock.getActivitiesEffortCount _ when (4644366: BigInt) returns Future(2: BigInt)
-    stravaMock.getActivitiesEffortCount _ when (2507082: BigInt) returns Future(3: BigInt)
+    stravaMock.getSegmentEffortCount _ when (6920366: BigInt) returns Future(100: BigInt)
+    stravaMock.getSegmentEffortCount _ when (4644366: BigInt) returns Future(2: BigInt)
+    stravaMock.getSegmentEffortCount _ when (2507082: BigInt) returns Future(3: BigInt)
 
     val controller: MostContestedController = new MostContestedController(stravaMock)
     val tmp = controller.proceedUserRequest(activityId)
@@ -42,9 +42,9 @@ class MostContestedControllerTest extends FlatSpec with MockFactory with ScalaFu
   "MostContestedController" should "handle client error" in {
 
     stravaMock.getSegmentsOfActivity _ when activityId returns Future(Seq(6920366, 4644366, 2507082): Seq[BigInt])
-    stravaMock.getActivitiesEffortCount _ when (6920366: BigInt) returns Future.exception(new IllegalStateException("qwerty"))
-    stravaMock.getActivitiesEffortCount _ when (4644366: BigInt) returns Future(2: BigInt)
-    stravaMock.getActivitiesEffortCount _ when (2507082: BigInt) returns Future(3: BigInt)
+    stravaMock.getSegmentEffortCount _ when (6920366: BigInt) returns Future.exception(new IllegalStateException("qwerty"))
+    stravaMock.getSegmentEffortCount _ when (4644366: BigInt) returns Future(2: BigInt)
+    stravaMock.getSegmentEffortCount _ when (2507082: BigInt) returns Future(3: BigInt)
 
     val controller: MostContestedController = new MostContestedController(stravaMock)
     val caught = twitterToScalaFuture(controller.proceedUserRequest(activityId)).futureValue

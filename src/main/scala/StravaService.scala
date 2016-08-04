@@ -19,7 +19,7 @@ class StravaService(oauthToken: String) {
       .map(StravaService.parseSegmentSeq)
   }
 
-  def getActivitiesEffortCount(segment: BigInt): Future[BigInt] = {
+  def getSegmentEffortCount(segment: BigInt): Future[BigInt] = {
     segmentsRequest(segment)
       .map(StravaService.parseEffortCount)
   }
